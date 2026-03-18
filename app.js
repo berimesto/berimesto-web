@@ -3,7 +3,7 @@ const SUPABASE_KEY = "sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm";
 
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Инициализация карты на Уфу
+// Карта Уфа
 const map = L.map('map').setView([54.7749, 56.0376], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
@@ -25,23 +25,22 @@ function closeCellsScreen() {
   cellsScreen.style.display = 'none';
 }
 
-// Загружаем склады
+// Загрузка складов
 async function loadWarehouses() {
   const { data: warehouses, error } = await client.from('warehouses').select('*');
   if (error) {
     console.error("Ошибка загрузки складов:", error);
     return;
   }
-  console.log("Склады:", warehouses);
 
-  warehouses.forEach(async warehouse => {
-    const marker = L.marker([warehouse.latitude, warehouse.longitude]).addTo(map);
+  warehouses.forEach(warehouse => {
+    const marker = L.marker([warehouse.lat, warehouse.lng]).addTo(map);
 
     marker.on('click', async () => {
       const { data: cells, error: cellsError } = await client
         .from('cells')
         .select('*')
-        .eq('warehouse_id', warehouse.id);
+        .eq('location_id', warehouse.id);
 
       if (cellsError) {
         console.error("Ошибка загрузки ячеек:", cellsError);
@@ -53,17 +52,17 @@ async function loadWarehouses() {
       // Заполняем popup
       popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
       popupName.textContent = warehouse.name;
-      popupAddress.textContent = warehouse.address;
+      popupAddress.textContent = warehouse.address || '';
       popupMinPrice.textContent = `от ${minPrice} ₽`;
       popup.style.display = 'block';
 
-      popupSelect.onclick = () => showCellsScreen(warehouse.id, false); // все ячейки склада
+      popupSelect.onclick = () => showCellsScreen(warehouse.id, false);
     });
   });
 }
 
 // Показать экран ячеек
-function showCellsScreen(warehouseId = null, onlyOccupied = false) {
+function showCellsScreen(locationId = null, onlyOccupied = false) {
   popup.style.display = 'none';
   cellsScreen.style.display = 'block';
   cellsUl.innerHTML = '';
@@ -71,9 +70,9 @@ function showCellsScreen(warehouseId = null, onlyOccupied = false) {
   let query = client.from('cells').select('*');
 
   if (onlyOccupied) {
-    query = query.eq('occupied', true); // только забронированные
-  } else if (warehouseId) {
-    query = query.eq('warehouse_id', warehouseId); // все ячейки выбранного склада
+    query = query.eq('is_free', false); // показываем только занятые
+  } else if (locationId) {
+    query = query.eq('location_id', locationId); // все ячейки выбранного склада
   }
 
   query.then(({ data: cells }) => {
@@ -81,14 +80,14 @@ function showCellsScreen(warehouseId = null, onlyOccupied = false) {
 
     cells.forEach(cell => {
       const li = document.createElement('li');
-      li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
+      li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.is_free ? "Свободно" : "Занято"}`;
 
-      // Кнопка "Забронировать" только для свободных ячеек склада
-      if (!cell.occupied && !onlyOccupied) {
+      // Кнопка "Забронировать" только для свободных ячеек
+      if (cell.is_free && !onlyOccupied) {
         const btn = document.createElement('button');
         btn.textContent = 'Забронировать';
         btn.onclick = async () => {
-          await client.from('cells').update({ occupied: true }).eq('id', cell.id);
+          await client.from('cells').update({ is_free: false }).eq('id', cell.id);
           li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
           btn.remove();
         };
@@ -107,7 +106,7 @@ function showTab(tab) {
     popup.style.display = 'none';
     map.invalidateSize();
   } else if (tab === 'cells') {
-    showCellsScreen(null, true); // только мои забронированные
+    showCellsScreen(null, true); // показываем только забронированные
   } else {
     alert("Доступ пока заглушка");
   }
