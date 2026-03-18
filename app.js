@@ -70,7 +70,7 @@ function showCellsScreen(locationId = null, onlyOccupied = false) {
   let query = client.from('cells').select('*');
 
   if (onlyOccupied) {
-    query = query.eq('is_free', false); // только занятые
+    query = query.eq('is_free', false); // только забронированные
   } else if (locationId) {
     query = query.eq('location_id', locationId); // все ячейки выбранного склада
   }
@@ -82,7 +82,7 @@ function showCellsScreen(locationId = null, onlyOccupied = false) {
       const li = document.createElement('li');
       li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.is_free ? "Свободно" : "Занято"}`;
 
-      // Кнопка "Забронировать" для свободных ячеек склада
+      // Кнопка "Забронировать" для свободных ячеек
       if (cell.is_free && !onlyOccupied) {
         const btn = document.createElement('button');
         btn.textContent = 'Забронировать';
@@ -106,7 +106,7 @@ function showTab(tab) {
     popup.style.display = 'none';
     map.invalidateSize();
   } else if (tab === 'cells') {
-    showCellsScreen(null, true); // только мои забронированные
+    showCellsScreen(null, true); // показываем только забронированные
   }
 }
 
