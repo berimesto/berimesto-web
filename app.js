@@ -62,38 +62,49 @@ async function loadWarehouses() {
 }
 
 // Показать экран ячеек
-function showCellsScreen(warehouseId) {
+function showCellsScreen(warehouseId, onlyOccupied = false) {
   popup.style.display = 'none';
   cellsScreen.style.display = 'block';
   cellsUl.innerHTML = '';
 
-  client.from('cells')
-    .select('*')
-    .eq('warehouse_id', warehouseId)
-    .then(({ data: cells }) => {
-      cells.forEach(cell => {
-        const li = document.createElement('li');
-        li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
+  let query = client.from('cells').select('*');
+  if (onlyOccupied) query = query.eq('occupied', true);
+  if (warehouseId) query = query.eq('warehouse_id', warehouseId);
 
-        if (!cell.occupied) {
-          const btn = document.createElement('button');
-          btn.textContent = 'Забронировать';
-          btn.onclick = async () => {
-            await client.from('cells').update({ occupied: true }).eq('id', cell.id);
-            li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
-            btn.remove();
-          };
-          li.appendChild(btn);
-        }
+  query.then(({ data: cells }) => {
+    if (!cells) return;
 
-        cellsUl.appendChild(li);
-      });
+    cells.forEach(cell => {
+      const li = document.createElement('li');
+      li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
+
+      if (!cell.occupied && !onlyOccupied) {
+        const btn = document.createElement('button');
+        btn.textContent = 'Забронировать';
+        btn.onclick = async () => {
+          await client.from('cells').update({ occupied: true }).eq('id', cell.id);
+          li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
+          btn.remove();
+        };
+        li.appendChild(btn);
+      }
+
+      cellsUl.appendChild(li);
     });
+  });
 }
 
-// Navbar заглушка
+// Navbar
 function showTab(tab) {
-  alert("Пока заглушка: " + tab);
+  if (tab === 'map') {
+    cellsScreen.style.display = 'none';
+    popup.style.display = 'none';
+    map.invalidateSize(); // чтобы карта правильно показалась
+  } else if (tab === 'cells') {
+    showCellsScreen(null, true); // показываем только забронированные
+  } else {
+    alert("Доступ пока заглушка");
+  }
 }
 
 loadWarehouses();
