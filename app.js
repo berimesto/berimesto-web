@@ -1,96 +1,112 @@
-const SUPABASE_URL = "https://jjvfilxdnpdywtbhcfrq.supabase.co";
-const SUPABASE_KEY = "sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm";
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Настройки Supabase
+const SUPABASE_URL = 'https://YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Вкладки
-const warehousesTab = document.getElementById('warehouses');
-const cellsTab = document.getElementById('cells');
-const myAccessTab = document.getElementById('my-access');
+const main = document.getElementById('main-content');
 
-function showTab(tab) {
-  warehousesTab.style.display = 'none';
-  cellsTab.style.display = 'none';
-  myAccessTab.style.display = 'none';
+// Навигация
+document.getElementById('menu-my-boxes').addEventListener('click', showMyBoxes);
+document.getElementById('menu-warehouses').addEventListener('click', showWarehouses);
+document.getElementById('menu-cells').addEventListener('click', () => {
+  main.innerHTML = '<h3>Ячейки</h3><p>Здесь будет список ячеек.</p>';
+});
+document.getElementById('menu-my-access').addEventListener('click', () => {
+  main.innerHTML = '<h3>Мой доступ</h3><p>Здесь будет информация о вашем доступе.</p>';
+});
 
-  if(tab === 'warehouses') warehousesTab.style.display = 'block';
-  if(tab === 'cells') cellsTab.style.display = 'block';
-  if(tab === 'my-access') myAccessTab.style.display = 'block';
-}
+// Функции
+async function showWarehouses() {
+  main.innerHTML = '<h3>Склады</h3><p>Загрузка...</p>';
+  const { data, error } = await supabase.from('Warehouse').select('*');
 
-// Загрузка складов
-async function loadWarehouses() {
-  const { data: warehouses, error: wError } = await client.from('warehouses').select('*');
-  const { data: cells, error: cError } = await client.from('cells').select('*');
-
-  if (wError || cError) {
-    console.error("Ошибка загрузки данных:", wError || cError);
+  if (error) {
+    main.innerHTML = `<p>Ошибка загрузки: ${error.message}</p>`;
     return;
   }
 
-  warehousesTab.innerHTML = '';
-  warehouses.forEach(w => {
-    const warehouseCells = cells.filter(c => c.location_id === w.id);
-    const freeCells = warehouseCells.filter(c => c.is_free).length;
-    const minPrice = warehouseCells.length ? Math.min(...warehouseCells.map(c => c.price)) : 0;
-
+  main.innerHTML = '';
+  data.forEach(warehouse => {
     const div = document.createElement('div');
-    div.className = 'warehouse';
+    div.classList.add('warehouse');
     div.innerHTML = `
-      <img src="${w.photo_url || 'https://via.placeholder.com/100x70'}">
-      <div>
-        <b>${w.name}</b><br>
-        ${w.address || ''}<br>
-        Ячеек: ${warehouseCells.length}, свободно: ${freeCells}<br>
-        От ${minPrice} ₽
-      </div>
+      <h4>${warehouse.name}</h4>
+      <p>Адрес: ${warehouse.address}</p>
+      <p>Ячеек: ${warehouse.total_cells}, свободно: ${warehouse.free_cells}</p>
+      <p>Стоимость: от ${warehouse.price} ₽</p>
+      <img src="${warehouse.photo_url}" alt="${warehouse.name}" width="200">
+      <button data-id="${warehouse.id}">Забронировать ячейку</button>
     `;
-    warehousesTab.appendChild(div);
+    div.querySelector('button').addEventListener('click', () => showCells(warehouse.id));
+    main.appendChild(div);
   });
 }
 
-// Загрузка всех ячеек
-async function loadCells() {
-  const { data: warehouses, error: wError } = await client.from('warehouses').select('*');
-  const { data: cells, error: cError } = await client.from('cells').select('*');
+async function showCells(warehouseId) {
+  main.innerHTML = `<h3>Ячейки склада ${warehouseId}</h3><p>Загрузка...</p>`;
+  const { data, error } = await supabase.from('Sales').select('*').eq('warehouse_id', warehouseId);
 
-  if (wError || cError) {
-    console.error("Ошибка загрузки данных:", wError || cError);
+  if (error) {
+    main.innerHTML = `<p>Ошибка: ${error.message}</p>`;
     return;
   }
 
-  cellsTab.innerHTML = '';
-  cells.forEach(c => {
-    const warehouse = warehouses.find(w => w.id === c.location_id);
+  main.innerHTML = '';
+  data.forEach(cell => {
     const div = document.createElement('div');
-    div.className = 'cell';
+    div.classList.add('cell');
     div.innerHTML = `
-      <img src="${c.photo_url || warehouse?.photo_url || 'https://via.placeholder.com/100x70'}">
-      <div>
-        <b>${warehouse?.name || ''}</b><br>
-        ${warehouse?.address || ''}<br>
-        Размер: ${c.size}<br>
-        Цена: ${c.price} ₽<br>
-        ${c.is_free ? 'Свободно' : 'Занято'}
-      </div>
+      <p>Ячейка ${cell.name} — ${cell.size} м³ — ${cell.is_free ? 'Свободна' : 'Занята'} — ${cell.price} ₽</p>
+      <button ${cell.is_free ? '' : 'disabled'} data-id="${cell.id}">Забронировать</button>
     `;
-    // Кнопка "Забронировать"
-    if(c.is_free){
-      const btn = document.createElement('button');
-      btn.className = 'book';
-      btn.textContent = 'Забронировать';
-      btn.onclick = async () => {
-        await client.from('cells').update({ is_free: false }).eq('id', c.id);
-        div.querySelector('div').innerHTML += '<br>Забронировано';
-        btn.remove();
-      };
-      div.appendChild(btn);
+    if (cell.is_free) {
+      div.querySelector('button').addEventListener('click', () => choosePlan(cell.id));
     }
-    cellsTab.appendChild(div);
+    main.appendChild(div);
   });
 }
 
-// Инициализация
-showTab('warehouses');
-loadWarehouses();
-loadCells();
+function choosePlan(cellId) {
+  main.innerHTML = `
+    <h3>Выберите тарифный план</h3>
+    <button data-plan="month">Месяц — 1490 ₽</button>
+    <button data-plan="quarter">Квартал — 4200 ₽</button>
+    <button data-plan="half">Полгода — 7800 ₽</button>
+    <button data-plan="year">Год — 15000 ₽</button>
+  `;
+  main.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => rentCell(cellId, btn.dataset.plan));
+  });
+}
+
+async function rentCell(cellId, plan) {
+  // Здесь можно добавить интеграцию с оплатой
+  const { data, error } = await supabase.from('Sales').update({ is_free: false, plan: plan }).eq('id', cellId);
+
+  if (error) {
+    main.innerHTML = `<p>Ошибка аренды: ${error.message}</p>`;
+    return;
+  }
+
+  alert('Ячейка успешно арендована!');
+  showMyBoxes();
+}
+
+async function showMyBoxes() {
+  main.innerHTML = '<h3>Мои боксы</h3><p>Загрузка...</p>';
+  const { data, error } = await supabase.from('Sales').select('*').eq('is_free', false);
+
+  if (error) {
+    main.innerHTML = `<p>Ошибка: ${error.message}</p>`;
+    return;
+  }
+
+  main.innerHTML = '';
+  data.forEach(cell => {
+    const div = document.createElement('div');
+    div.innerHTML = `<p>Ячейка ${cell.name} — ${cell.size} м³ — Тариф: ${cell.plan}</p>`;
+    main.appendChild(div);
+  });
+}
