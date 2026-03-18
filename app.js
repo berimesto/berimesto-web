@@ -27,19 +27,31 @@ function closeCellsScreen() {
 
 // Загружаем склады
 async function loadWarehouses() {
-  const { data: warehouses } = await client.from('warehouses').select('*');
+  const { data: warehouses, error } = await client.from('warehouses').select('*');
+  if (error) {
+    console.error("Ошибка загрузки складов:", error);
+    return;
+  }
+  console.log("Склады:", warehouses);
 
   warehouses.forEach(async warehouse => {
     const marker = L.marker([warehouse.latitude, warehouse.longitude]).addTo(map);
 
     marker.on('click', async () => {
-      const { data: cells } = await client
+      // Получаем ячейки этого склада
+      const { data: cells, error: cellsError } = await client
         .from('cells')
         .select('*')
         .eq('warehouse_id', warehouse.id);
 
+      if (cellsError) {
+        console.error("Ошибка загрузки ячеек:", cellsError);
+        return;
+      }
+
       const minPrice = Math.min(...cells.map(c => c.price));
 
+      // Заполняем popup
       popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
       popupName.textContent = warehouse.name;
       popupAddress.textContent = warehouse.address;
