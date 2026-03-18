@@ -1,67 +1,89 @@
-// Элементы popup
-const popup = document.getElementById('warehouse-popup');
-const popupImg = document.getElementById('popup-img');
-const popupName = document.getElementById('popup-name');
-const popupAddress = document.getElementById('popup-address');
-const popupMinPrice = document.getElementById('popup-min-price');
-const popupSelect = document.getElementById('popup-select');
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Бери место</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body, html { margin: 0; height: 100%; }
+    #map { height: 100vh; }
 
-warehouses.forEach(async warehouse => {
-    const marker = L.marker([warehouse.latitude, warehouse.longitude]).addTo(map);
+    /* Navbar снизу */
+    #navbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      border-top: 1px solid #ccc;
+      padding: 10px 0;
+      z-index: 1000;
+    }
+    #navbar button { background: none; border: none; font-size: 16px; }
 
-    marker.on('click', async () => {
-        // Получаем ячейки склада
-        const { data: cells } = await client
-            .from('cells')
-            .select('*')
-            .eq('warehouse_id', warehouse.id);
+    /* Popup склада снизу */
+    #warehouse-popup {
+      display: none;
+      position: fixed;
+      bottom: 50px; /* выше navbar */
+      width: 100%;
+      background: #fff;
+      border-top: 1px solid #ccc;
+      padding: 15px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    #warehouse-popup img { width: 100%; height: 150px; object-fit: cover; border-radius: 5px; }
 
-        // Минимальная цена
-        const minPrice = Math.min(...cells.map(c => c.price));
+    /* Экран ячеек */
+    #cells-list {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      background: #fff;
+      z-index: 1001;
+      padding: 20px;
+    }
+    #cells-list ul { list-style: none; padding: 0; }
+    #cells-list li { margin-bottom: 10px; }
+    #cells-list button { margin-left: 10px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
 
-        // Заполняем popup
-        popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
-        popupName.textContent = warehouse.name;
-        popupAddress.textContent = warehouse.address;
-        popupMinPrice.textContent = `от ${minPrice} ₽`;
+  <!-- Popup склада -->
+  <div id="warehouse-popup">
+    <img id="popup-img" src="">
+    <h3 id="popup-name"></h3>
+    <p id="popup-address"></p>
+    <p id="popup-min-price"></p>
+    <button id="popup-select">Выбрать ячейку</button>
+  </div>
 
-        popup.style.display = 'block';
+  <!-- Экран ячеек -->
+  <div id="cells-list">
+    <h3>Ячейки склада</h3>
+    <ul id="cells-ul"></ul>
+    <button onclick="closeCellsScreen()">Назад к карте</button>
+  </div>
 
-        popupSelect.onclick = () => {
-            showCellsScreen(warehouse.id);
-        };
-    });
-});
+  <!-- Navbar -->
+  <div id="navbar">
+    <button onclick="showTab('map')">Карта</button>
+    <button onclick="showTab('cells')">Мои ячейки</button>
+    <button onclick="showTab('access')">Доступ</button>
+  </div>
 
-// Функция для показа экрана с ячейками
-function showCellsScreen(warehouseId) {
-    popup.style.display = 'none';
-    const cellsScreen = document.getElementById('cells-list');
-    const cellsUl = document.getElementById('cells-ul');
-
-    cellsScreen.style.display = 'block';
-    cellsUl.innerHTML = '';
-
-    client.from('cells')
-        .select('*')
-        .eq('warehouse_id', warehouseId)
-        .then(({ data: cells }) => {
-            cells.forEach(cell => {
-                const li = document.createElement('li');
-                li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
-
-                if (!cell.occupied) {
-                    const btn = document.createElement('button');
-                    btn.textContent = 'Забронировать';
-                    btn.onclick = async () => {
-                        await client.from('cells').update({ occupied: true }).eq('id', cell.id);
-                        li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
-                        btn.remove();
-                    };
-                    li.appendChild(btn);
-                }
-
-                cellsUl.appendChild(li);
-            });
-        });
-}
+  <!-- Скрипты -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
