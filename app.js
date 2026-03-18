@@ -1,8 +1,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// Настройки Supabase
-const SUPABASE_URL = 'https://YOUR_SUPABASE_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
+// Подключение к Supabase
+const SUPABASE_URL = 'https://jjvfilxdnpdywtbhcfrq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const main = document.getElementById('main-content');
@@ -18,9 +18,11 @@ document.getElementById('menu-my-access').addEventListener('click', () => {
 });
 
 // Функции
+
+// Показать список складов
 async function showWarehouses() {
   main.innerHTML = '<h3>Склады</h3><p>Загрузка...</p>';
-  const { data, error } = await supabase.from('Warehouse').select('*');
+  const { data, error } = await supabase.from('warehouses').select('*');
 
   if (error) {
     main.innerHTML = `<p>Ошибка загрузки: ${error.message}</p>`;
@@ -44,9 +46,10 @@ async function showWarehouses() {
   });
 }
 
+// Показать ячейки конкретного склада
 async function showCells(warehouseId) {
   main.innerHTML = `<h3>Ячейки склада ${warehouseId}</h3><p>Загрузка...</p>`;
-  const { data, error } = await supabase.from('Sales').select('*').eq('warehouse_id', warehouseId);
+  const { data, error } = await supabase.from('cells').select('*').eq('warehouse_id', warehouseId);
 
   if (error) {
     main.innerHTML = `<p>Ошибка: ${error.message}</p>`;
@@ -68,6 +71,7 @@ async function showCells(warehouseId) {
   });
 }
 
+// Выбор тарифного плана
 function choosePlan(cellId) {
   main.innerHTML = `
     <h3>Выберите тарифный план</h3>
@@ -81,9 +85,10 @@ function choosePlan(cellId) {
   });
 }
 
+// Аренда ячейки (обновление в Supabase)
 async function rentCell(cellId, plan) {
   // Здесь можно добавить интеграцию с оплатой
-  const { data, error } = await supabase.from('Sales').update({ is_free: false, plan: plan }).eq('id', cellId);
+  const { data, error } = await supabase.from('cells').update({ is_free: false, plan: plan }).eq('id', cellId);
 
   if (error) {
     main.innerHTML = `<p>Ошибка аренды: ${error.message}</p>`;
@@ -94,9 +99,10 @@ async function rentCell(cellId, plan) {
   showMyBoxes();
 }
 
+// Показать мои арендованные боксы
 async function showMyBoxes() {
   main.innerHTML = '<h3>Мои боксы</h3><p>Загрузка...</p>';
-  const { data, error } = await supabase.from('Sales').select('*').eq('is_free', false);
+  const { data, error } = await supabase.from('cells').select('*').eq('is_free', false);
 
   if (error) {
     main.innerHTML = `<p>Ошибка: ${error.message}</p>`;
@@ -104,6 +110,11 @@ async function showMyBoxes() {
   }
 
   main.innerHTML = '';
+  if (data.length === 0) {
+    main.innerHTML = '<p>У вас пока нет арендованных ячеек.</p>';
+    return;
+  }
+
   data.forEach(cell => {
     const div = document.createElement('div');
     div.innerHTML = `<p>Ячейка ${cell.name} — ${cell.size} м³ — Тариф: ${cell.plan}</p>`;
