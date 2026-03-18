@@ -1,113 +1,96 @@
 const SUPABASE_URL = "https://jjvfilxdnpdywtbhcfrq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm";
 
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Карта Уфа
-const map = L.map('map').setView([54.7749, 56.0376], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+// Вкладки
+const warehousesTab = document.getElementById('warehouses');
+const cellsTab = document.getElementById('cells');
+const myAccessTab = document.getElementById('my-access');
 
-// Popup элементы
-const popup = document.getElementById('warehouse-popup');
-const popupImg = document.getElementById('popup-img');
-const popupName = document.getElementById('popup-name');
-const popupAddress = document.getElementById('popup-address');
-const popupMinPrice = document.getElementById('popup-min-price');
-const popupSelect = document.getElementById('popup-select');
+function showTab(tab) {
+  warehousesTab.style.display = 'none';
+  cellsTab.style.display = 'none';
+  myAccessTab.style.display = 'none';
 
-// Экран ячеек
-const cellsScreen = document.getElementById('cells-list');
-const cellsUl = document.getElementById('cells-ul');
-
-function closeCellsScreen() {
-  cellsScreen.style.display = 'none';
+  if(tab === 'warehouses') warehousesTab.style.display = 'block';
+  if(tab === 'cells') cellsTab.style.display = 'block';
+  if(tab === 'my-access') myAccessTab.style.display = 'block';
 }
 
 // Загрузка складов
 async function loadWarehouses() {
-  const { data: warehouses, error } = await client.from('warehouses').select('*');
-  if (error) {
-    console.error("Ошибка загрузки складов:", error);
+  const { data: warehouses, error: wError } = await client.from('warehouses').select('*');
+  const { data: cells, error: cError } = await client.from('cells').select('*');
+
+  if (wError || cError) {
+    console.error("Ошибка загрузки данных:", wError || cError);
     return;
   }
 
-  warehouses.forEach(warehouse => {
-    const marker = L.marker([warehouse.lat, warehouse.lng]).addTo(map);
+  warehousesTab.innerHTML = '';
+  warehouses.forEach(w => {
+    const warehouseCells = cells.filter(c => c.location_id === w.id);
+    const freeCells = warehouseCells.filter(c => c.is_free).length;
+    const minPrice = warehouseCells.length ? Math.min(...warehouseCells.map(c => c.price)) : 0;
 
-    marker.on('click', async () => {
-      const { data: cells, error: cellsError } = await client
-        .from('cells')
-        .select('*')
-        .eq('location_id', warehouse.id);
-
-      if (cellsError) {
-        console.error("Ошибка загрузки ячеек:", cellsError);
-        return;
-      }
-
-      const minPrice = Math.min(...cells.map(c => c.price));
-
-      // Заполняем popup
-      popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
-      popupName.textContent = warehouse.name;
-      popupAddress.textContent = warehouse.address || '';
-      popupMinPrice.textContent = `от ${minPrice} ₽`;
-      popup.style.display = 'block';
-
-      popupSelect.onclick = () => showCellsScreen(warehouse.id, false);
-    });
+    const div = document.createElement('div');
+    div.className = 'warehouse';
+    div.innerHTML = `
+      <img src="${w.photo_url || 'https://via.placeholder.com/100x70'}">
+      <div>
+        <b>${w.name}</b><br>
+        ${w.address || ''}<br>
+        Ячеек: ${warehouseCells.length}, свободно: ${freeCells}<br>
+        От ${minPrice} ₽
+      </div>
+    `;
+    warehousesTab.appendChild(div);
   });
 }
 
-// Показать экран ячеек
-function showCellsScreen(locationId = null, onlyOccupied = false) {
-  popup.style.display = 'none';
-  cellsScreen.style.display = 'block';
-  cellsUl.innerHTML = '';
+// Загрузка всех ячеек
+async function loadCells() {
+  const { data: warehouses, error: wError } = await client.from('warehouses').select('*');
+  const { data: cells, error: cError } = await client.from('cells').select('*');
 
-  let query = client.from('cells').select('*');
-
-  if (onlyOccupied) {
-    query = query.eq('is_free', false); // только забронированные
-  } else if (locationId) {
-    query = query.eq('location_id', locationId); // все ячейки выбранного склада
+  if (wError || cError) {
+    console.error("Ошибка загрузки данных:", wError || cError);
+    return;
   }
 
-  query.then(({ data: cells }) => {
-    if (!cells) return;
-
-    cells.forEach(cell => {
-      const li = document.createElement('li');
-      li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.is_free ? "Свободно" : "Занято"}`;
-
-      // Кнопка "Забронировать" для свободных ячеек
-      if (cell.is_free && !onlyOccupied) {
-        const btn = document.createElement('button');
-        btn.textContent = 'Забронировать';
-        btn.onclick = async () => {
-          await client.from('cells').update({ is_free: false }).eq('id', cell.id);
-          li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
-          btn.remove();
-        };
-        li.appendChild(btn);
-      }
-
-      cellsUl.appendChild(li);
-    });
+  cellsTab.innerHTML = '';
+  cells.forEach(c => {
+    const warehouse = warehouses.find(w => w.id === c.location_id);
+    const div = document.createElement('div');
+    div.className = 'cell';
+    div.innerHTML = `
+      <img src="${c.photo_url || warehouse?.photo_url || 'https://via.placeholder.com/100x70'}">
+      <div>
+        <b>${warehouse?.name || ''}</b><br>
+        ${warehouse?.address || ''}<br>
+        Размер: ${c.size}<br>
+        Цена: ${c.price} ₽<br>
+        ${c.is_free ? 'Свободно' : 'Занято'}
+      </div>
+    `;
+    // Кнопка "Забронировать"
+    if(c.is_free){
+      const btn = document.createElement('button');
+      btn.className = 'book';
+      btn.textContent = 'Забронировать';
+      btn.onclick = async () => {
+        await client.from('cells').update({ is_free: false }).eq('id', c.id);
+        div.querySelector('div').innerHTML += '<br>Забронировано';
+        btn.remove();
+      };
+      div.appendChild(btn);
+    }
+    cellsTab.appendChild(div);
   });
 }
 
-// Navbar
-function showTab(tab) {
-  if (tab === 'map') {
-    cellsScreen.style.display = 'none';
-    popup.style.display = 'none';
-    map.invalidateSize();
-  } else if (tab === 'cells') {
-    showCellsScreen(null, true); // показываем только забронированные
-  }
-}
-
+// Инициализация
+showTab('warehouses');
 loadWarehouses();
+loadCells();
