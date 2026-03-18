@@ -1,51 +1,67 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Бери место</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-</head>
-<body>
-    <h1>Склады</h1>
-    <div id="map" style="height: calc(100vh - 60px);"></div>
-    <script src="app.js"></script>
+// Элементы popup
+const popup = document.getElementById('warehouse-popup');
+const popupImg = document.getElementById('popup-img');
+const popupName = document.getElementById('popup-name');
+const popupAddress = document.getElementById('popup-address');
+const popupMinPrice = document.getElementById('popup-min-price');
+const popupSelect = document.getElementById('popup-select');
 
+warehouses.forEach(async warehouse => {
+    const marker = L.marker([warehouse.latitude, warehouse.longitude]).addTo(map);
 
-    <div id="navbar">
-  <button onclick="showTab('map')">Карта</button>
-  <button onclick="showTab('cells')">Мои ячейки</button>
-  <button onclick="showTab('access')">Доступ</button>
-</div>
+    marker.on('click', async () => {
+        // Получаем ячейки склада
+        const { data: cells } = await client
+            .from('cells')
+            .select('*')
+            .eq('warehouse_id', warehouse.id);
 
-    <div id="warehouse-popup" style="display:none; position: fixed; bottom: 0; width: 100%; background: #fff; border-top: 1px solid #ccc; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000;">
-  <img id="popup-img" src="" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
-  <h3 id="popup-name"></h3>
-  <p id="popup-address"></p>
-  <p id="popup-min-price"></p>
-  <button id="popup-select">Выбрать ячейку</button>
-</div>
-    
-<style>
-  #navbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    background: white;
-    border-top: 1px solid #ccc;
-    padding: 10px 0;
-    z-index: 1000; /* ВАЖНО */
-  }
+        // Минимальная цена
+        const minPrice = Math.min(...cells.map(c => c.price));
 
-  #navbar button {
-    background: none;
-    border: none;
-    font-size: 16px;
-  }
-</style>
-</body>
-</html>
+        // Заполняем popup
+        popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
+        popupName.textContent = warehouse.name;
+        popupAddress.textContent = warehouse.address;
+        popupMinPrice.textContent = `от ${minPrice} ₽`;
+
+        popup.style.display = 'block';
+
+        popupSelect.onclick = () => {
+            showCellsScreen(warehouse.id);
+        };
+    });
+});
+
+// Функция для показа экрана с ячейками
+function showCellsScreen(warehouseId) {
+    popup.style.display = 'none';
+    const cellsScreen = document.getElementById('cells-list');
+    const cellsUl = document.getElementById('cells-ul');
+
+    cellsScreen.style.display = 'block';
+    cellsUl.innerHTML = '';
+
+    client.from('cells')
+        .select('*')
+        .eq('warehouse_id', warehouseId)
+        .then(({ data: cells }) => {
+            cells.forEach(cell => {
+                const li = document.createElement('li');
+                li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
+
+                if (!cell.occupied) {
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Забронировать';
+                    btn.onclick = async () => {
+                        await client.from('cells').update({ occupied: true }).eq('id', cell.id);
+                        li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
+                        btn.remove();
+                    };
+                    li.appendChild(btn);
+                }
+
+                cellsUl.appendChild(li);
+            });
+        });
+}
