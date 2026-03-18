@@ -3,7 +3,7 @@ const SUPABASE_KEY = "sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm";
 
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const map = L.map('map').setView([55.7558, 37.6173], 12);
+const map = L.map('map').setView([54.7388, 55.9721], 13);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
