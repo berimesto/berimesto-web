@@ -9,6 +9,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
+function showTab(tab) {
+  alert("Пока заглушка: " + tab);
+}
+
 async function loadWarehouses() {
   const { data: warehouses, error } = await client
     .from('warehouses')
