@@ -42,5 +42,73 @@ async function loadWarehouses() {
     marker.bindPopup(popupContent);
   }
 }
+// Элементы popup
+const popup = document.getElementById('warehouse-popup');
+const popupImg = document.getElementById('popup-img');
+const popupName = document.getElementById('popup-name');
+const popupAddress = document.getElementById('popup-address');
+const popupMinPrice = document.getElementById('popup-min-price');
+const popupSelect = document.getElementById('popup-select');
+
+warehouses.forEach(async warehouse => {
+    const marker = L.marker([warehouse.latitude, warehouse.longitude]).addTo(map);
+
+    marker.on('click', async () => {
+        // Получаем ячейки склада
+        const { data: cells } = await client
+            .from('cells')
+            .select('*')
+            .eq('warehouse_id', warehouse.id);
+
+        // Минимальная цена
+        const minPrice = Math.min(...cells.map(c => c.price));
+
+        // Заполняем popup
+        popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
+        popupName.textContent = warehouse.name;
+        popupAddress.textContent = warehouse.address;
+        popupMinPrice.textContent = `от ${minPrice} ₽`;
+
+        popup.style.display = 'block';
+
+        popupSelect.onclick = () => {
+            showCellsScreen(warehouse.id);
+        };
+    });
+});
+
+// Функция для показа экрана с ячейками
+function showCellsScreen(warehouseId) {
+    popup.style.display = 'none';
+    const cellsScreen = document.getElementById('cells-list');
+    const cellsUl = document.getElementById('cells-ul');
+
+    cellsScreen.style.display = 'block';
+    cellsUl.innerHTML = '';
+
+    client.from('cells')
+        .select('*')
+        .eq('warehouse_id', warehouseId)
+        .then(({ data: cells }) => {
+            cells.forEach(cell => {
+                const li = document.createElement('li');
+                li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
+
+                if (!cell.occupied) {
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Забронировать';
+                    btn.onclick = async () => {
+                        await client.from('cells').update({ occupied: true }).eq('id', cell.id);
+                        li.textContent = `${cell.size} — ${cell.price} ₽ — Занято`;
+                        btn.remove();
+                    };
+                    li.appendChild(btn);
+                }
+
+                cellsUl.appendChild(li);
+            });
+        });
+}
+
 
 loadWarehouses();
