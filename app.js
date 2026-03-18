@@ -50,26 +50,31 @@ async function loadWarehouses() {
 
       const minPrice = Math.min(...cells.map(c => c.price));
 
+      // Заполняем popup
       popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
       popupName.textContent = warehouse.name;
       popupAddress.textContent = warehouse.address;
       popupMinPrice.textContent = `от ${minPrice} ₽`;
       popup.style.display = 'block';
 
-      popupSelect.onclick = () => showCellsScreen(warehouse.id);
+      popupSelect.onclick = () => showCellsScreen(warehouse.id, false); // все ячейки склада
     });
   });
 }
 
 // Показать экран ячеек
-function showCellsScreen(warehouseId, onlyOccupied = false) {
+function showCellsScreen(warehouseId = null, onlyOccupied = false) {
   popup.style.display = 'none';
   cellsScreen.style.display = 'block';
   cellsUl.innerHTML = '';
 
   let query = client.from('cells').select('*');
-  if (onlyOccupied) query = query.eq('occupied', true);
-  if (warehouseId) query = query.eq('warehouse_id', warehouseId);
+
+  if (onlyOccupied) {
+    query = query.eq('occupied', true); // только забронированные
+  } else if (warehouseId) {
+    query = query.eq('warehouse_id', warehouseId); // все ячейки выбранного склада
+  }
 
   query.then(({ data: cells }) => {
     if (!cells) return;
@@ -78,6 +83,7 @@ function showCellsScreen(warehouseId, onlyOccupied = false) {
       const li = document.createElement('li');
       li.textContent = `${cell.size} — ${cell.price} ₽ — ${cell.occupied ? "Занято" : "Свободно"}`;
 
+      // Кнопка "Забронировать" только для свободных ячеек склада
       if (!cell.occupied && !onlyOccupied) {
         const btn = document.createElement('button');
         btn.textContent = 'Забронировать';
@@ -99,9 +105,9 @@ function showTab(tab) {
   if (tab === 'map') {
     cellsScreen.style.display = 'none';
     popup.style.display = 'none';
-    map.invalidateSize(); // чтобы карта правильно показалась
+    map.invalidateSize();
   } else if (tab === 'cells') {
-    showCellsScreen(null, true); // показываем только забронированные
+    showCellsScreen(null, true); // только мои забронированные
   } else {
     alert("Доступ пока заглушка");
   }
