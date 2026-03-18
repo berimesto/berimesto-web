@@ -10,16 +10,18 @@ const main = document.getElementById('main-content');
 // Навигация
 document.getElementById('menu-my-boxes').addEventListener('click', showMyBoxes);
 document.getElementById('menu-warehouses').addEventListener('click', showWarehouses);
-document.getElementById('menu-cells').addEventListener('click', () => {
-  main.innerHTML = '<h3>Ячейки</h3><p>Здесь будет список ячеек.</p>';
+document.getElementById('menu-contacts').addEventListener('click', () => {
+  main.innerHTML = `
+    <h3>Контакты</h3>
+    <p>Телефон: +7 123 456 78 90</p>
+    <p>Email: info@berimesto.ru</p>
+  `;
 });
 document.getElementById('menu-my-access').addEventListener('click', () => {
   main.innerHTML = '<h3>Мой доступ</h3><p>Здесь будет информация о вашем доступе.</p>';
 });
 
-// Функции
-
-// Показать список складов
+// Показать склады
 async function showWarehouses() {
   main.innerHTML = '<h3>Склады</h3><p>Загрузка...</p>';
   const { data, error } = await supabase.from('warehouses').select('*');
@@ -39,6 +41,7 @@ async function showWarehouses() {
       <p>Ячеек: ${warehouse.total_cells}, свободно: ${warehouse.free_cells}</p>
       <p>Стоимость: от ${warehouse.price} ₽</p>
       <img src="${warehouse.photo_url}" alt="${warehouse.name}" width="200">
+      <br>
       <button data-id="${warehouse.id}">Забронировать ячейку</button>
     `;
     div.querySelector('button').addEventListener('click', () => showCells(warehouse.id));
@@ -46,7 +49,7 @@ async function showWarehouses() {
   });
 }
 
-// Показать ячейки конкретного склада
+// Показать ячейки склада
 async function showCells(warehouseId) {
   main.innerHTML = `<h3>Ячейки склада ${warehouseId}</h3><p>Загрузка...</p>`;
   const { data, error } = await supabase.from('cells').select('*').eq('warehouse_id', warehouseId);
@@ -85,10 +88,9 @@ function choosePlan(cellId) {
   });
 }
 
-// Аренда ячейки (обновление в Supabase)
+// Аренда ячейки
 async function rentCell(cellId, plan) {
-  // Здесь можно добавить интеграцию с оплатой
-  const { data, error } = await supabase.from('cells').update({ is_free: false, plan: plan }).eq('id', cellId);
+  const { data, error } = await supabase.from('cells').update({ is_free: false, plan }).eq('id', cellId);
 
   if (error) {
     main.innerHTML = `<p>Ошибка аренды: ${error.message}</p>`;
@@ -99,7 +101,7 @@ async function rentCell(cellId, plan) {
   showMyBoxes();
 }
 
-// Показать мои арендованные боксы
+// Мои боксы
 async function showMyBoxes() {
   main.innerHTML = '<h3>Мои боксы</h3><p>Загрузка...</p>';
   const { data, error } = await supabase.from('cells').select('*').eq('is_free', false);
