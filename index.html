@@ -9,7 +9,7 @@
 </head>
 <body>
     <h1>Склады</h1>
-    <div id="map" style="height: 500px;"></div>
+    <div id="map" style="height: calc(100vh - 60px);"></div>
     <script src="app.js"></script>
 
 
@@ -23,12 +23,14 @@
   #navbar {
     position: fixed;
     bottom: 0;
+    left: 0;
     width: 100%;
     display: flex;
     justify-content: space-around;
-    background: #fff;
+    background: white;
     border-top: 1px solid #ccc;
     padding: 10px 0;
+    z-index: 1000; /* ВАЖНО */
   }
 
   #navbar button {
