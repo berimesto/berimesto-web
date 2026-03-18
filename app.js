@@ -38,7 +38,6 @@ async function loadWarehouses() {
     const marker = L.marker([warehouse.latitude, warehouse.longitude]).addTo(map);
 
     marker.on('click', async () => {
-      // Получаем ячейки этого склада
       const { data: cells, error: cellsError } = await client
         .from('cells')
         .select('*')
@@ -51,7 +50,6 @@ async function loadWarehouses() {
 
       const minPrice = Math.min(...cells.map(c => c.price));
 
-      // Заполняем popup
       popupImg.src = warehouse.photo_url || 'https://via.placeholder.com/400x150';
       popupName.textContent = warehouse.name;
       popupAddress.textContent = warehouse.address;
