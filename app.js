@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co"; // вставь свой URL
-const SUPABASE_KEY = "YOUR_ANON_KEY"; // вставь свой anon key
+const SUPABASE_URL = "https://jjvfilxdnpdywtbhcfrq.supabase.co; // вставь свой URL
+const SUPABASE_KEY = "sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm"; // вставь свой anon key
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
