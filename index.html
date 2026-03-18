@@ -11,5 +11,31 @@
     <h1>Склады</h1>
     <div id="map" style="height: 500px;"></div>
     <script src="app.js"></script>
+
+
+    <div id="navbar">
+  <button onclick="showTab('map')">Карта</button>
+  <button onclick="showTab('cells')">Мои ячейки</button>
+  <button onclick="showTab('access')">Доступ</button>
+</div>
+
+<style>
+  #navbar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background: #fff;
+    border-top: 1px solid #ccc;
+    padding: 10px 0;
+  }
+
+  #navbar button {
+    background: none;
+    border: none;
+    font-size: 16px;
+  }
+</style>
 </body>
 </html>
