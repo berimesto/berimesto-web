@@ -1,34 +1,520 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>БериМесто</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    nav { background-color: #333; color: #fff; padding: 10px; }
-    nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
-    nav li { margin-right: 20px; }
-    nav a { color: #fff; text-decoration: none; font-weight: bold; }
-    nav a:hover { text-decoration: underline; }
-    main { padding: 20px; }
-    .warehouse, .cell { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-    button { padding: 5px 10px; cursor: pointer; margin-top: 5px; }
+    :root {
+      color-scheme: light;
+      --bg: #f3f6fb;
+      --surface: #ffffff;
+      --surface-muted: #eef3ff;
+      --text: #162033;
+      --text-muted: #5b6780;
+      --border: #d9e1f2;
+      --primary: #315efb;
+      --primary-hover: #2448c8;
+      --success: #1d9b60;
+      --danger: #d24747;
+      --shadow: 0 14px 40px rgba(35, 55, 100, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --container: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(49, 94, 251, 0.12), transparent 26%),
+        radial-gradient(circle at top right, rgba(29, 155, 96, 0.12), transparent 22%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(243, 246, 251, 0.88);
+      border-bottom: 1px solid rgba(217, 225, 242, 0.92);
+    }
+
+    .navbar__inner,
+    .page {
+      width: min(calc(100% - 32px), var(--container));
+      margin: 0 auto;
+    }
+
+    .navbar__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 16px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand__logo {
+      width: 42px;
+      height: 42px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(135deg, #315efb, #4ec6ff);
+      box-shadow: 0 10px 24px rgba(49, 94, 251, 0.28);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tab-button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .tab-button:hover,
+    .tab-button:focus-visible {
+      background: rgba(49, 94, 251, 0.1);
+      color: var(--primary);
+      outline: none;
+    }
+
+    .tab-button[aria-selected="true"] {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(49, 94, 251, 0.24);
+    }
+
+    .page {
+      padding: 32px 0 48px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .hero__panel,
+    .stats,
+    .section,
+    .notice,
+    .empty-state,
+    .error-state {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .hero__panel {
+      padding: 30px;
+    }
+
+    .hero__eyebrow {
+      display: inline-flex;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(49, 94, 251, 0.1);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 64ch;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .stats {
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+      align-content: center;
+    }
+
+    .stat {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: var(--surface-muted);
+    }
+
+    .stat__value {
+      display: block;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .stat__label {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .section {
+      padding: 26px;
+    }
+
+    .section__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .section__title {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .section__subtitle {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      display: grid;
+      grid-template-rows: 220px 1fr;
+      min-height: 100%;
+    }
+
+    .card__media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: linear-gradient(135deg, #dbe5ff, #eff5ff);
+    }
+
+    .card__body {
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .card__title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card__title {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .card__subtitle,
+    .meta-list,
+    .notice p,
+    .empty-state p,
+    .error-state p,
+    .loader,
+    .pill--muted {
+      color: var(--text-muted);
+    }
+
+    .card__subtitle {
+      margin: 8px 0 0;
+      line-height: 1.55;
+    }
+
+    .meta-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-muted);
+      font-size: 14px;
+    }
+
+    .meta-item strong {
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pill--success {
+      color: var(--success);
+      background: rgba(29, 155, 96, 0.12);
+    }
+
+    .pill--danger {
+      color: var(--danger);
+      background: rgba(210, 71, 71, 0.12);
+    }
+
+    .pill--muted {
+      background: rgba(91, 103, 128, 0.12);
+    }
+
+    .card__actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .button--secondary {
+      color: var(--primary);
+      background: rgba(49, 94, 251, 0.12);
+    }
+
+    .button--secondary:hover,
+    .button--secondary:focus-visible {
+      background: rgba(49, 94, 251, 0.18);
+    }
+
+    .loader,
+    .empty-state,
+    .error-state,
+    .notice {
+      padding: 28px;
+      text-align: center;
+    }
+
+    .loader {
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--border);
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .notice h2,
+    .empty-state h3,
+    .error-state h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 920px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .navbar__inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .tab-button {
+        flex: 1 1 calc(50% - 10px);
+        text-align: center;
+      }
+
+      .page {
+        padding-top: 24px;
+      }
+
+      .section,
+      .hero__panel,
+      .stats,
+      .notice,
+      .empty-state,
+      .error-state {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .navbar__inner,
+      .page {
+        width: min(calc(100% - 24px), var(--container));
+      }
+
+      .card {
+        grid-template-rows: 190px 1fr;
+      }
+
+      .section__header,
+      .card__actions,
+      .meta-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .tab-button {
+        flex-basis: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <nav>
-    <ul id="navbar">
-      <li><a href="#" id="menu-my-boxes">Мои боксы</a></li>
-      <li><a href="#" id="menu-warehouses">Склады</a></li>
-      <li><a href="#" id="menu-contacts">Контакты</a></li>
-      <li><a href="#" id="menu-my-access">Мой доступ</a></li>
-    </ul>
-  </nav>
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="navbar__inner">
+        <div class="brand" aria-label="БериМесто">
+          <span class="brand__logo">БМ</span>
+          <span>БериМесто</span>
+        </div>
 
-  <main id="main-content">
-    <h2>Добро пожаловать в БериМесто</h2>
-    <p>Выберите пункт меню для начала.</p>
-  </main>
+        <nav class="tabs" aria-label="Основные разделы">
+          <button class="tab-button" type="button" data-tab="warehouses" aria-selected="true">Склады</button>
+          <button class="tab-button" type="button" data-tab="cells" aria-selected="false">Ячейки</button>
+          <button class="tab-button" type="button" data-tab="access" aria-selected="false">Мой доступ</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero" aria-label="О сервисе БериМесто">
+        <div class="hero__panel">
+          <span class="hero__eyebrow">Умное хранение рядом</span>
+          <h1>Выбирайте склад, бронируйте ячейку и управляйте доступом в одном интерфейсе.</h1>
+          <p>
+            SPA-приложение загружает данные из Supabase, показывает доступные склады и ячейки,
+            а свободные места можно забронировать без перезагрузки страницы.
+          </p>
+        </div>
+
+        <aside class="stats" id="dashboard-stats" aria-live="polite">
+          <div class="stat">
+            <span class="stat__value" data-stat="warehouses">—</span>
+            <span class="stat__label">Складов в системе</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value" data-stat="cells">—</span>
+            <span class="stat__label">Всего ячеек</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value" data-stat="free-cells">—</span>
+            <span class="stat__label">Свободных ячеек</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="section" aria-live="polite">
+        <div class="section__header">
+          <div>
+            <h2 class="section__title" id="section-title">Склады</h2>
+            <p class="section__subtitle" id="section-subtitle">Загрузка данных из Supabase…</p>
+          </div>
+          <button class="button button--secondary" type="button" id="refresh-button">Обновить данные</button>
+        </div>
+
+        <div id="status-region" class="sr-only" aria-live="assertive"></div>
+        <div id="tab-content"></div>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="app.js"></script>
 </body>
