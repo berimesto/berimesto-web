@@ -1,0 +1,470 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --bm-bg: #f6f7fb;
+    --bm-white: #ffffff;
+    --bm-text: #111827;
+    --bm-muted: #6b7280;
+    --bm-line: #e5e7eb;
+    --bm-primary: #3d4ed7;
+    --bm-primary-dark: #3140b8;
+    --bm-primary-soft: #eef1ff;
+    --bm-success: #22c55e;
+    --bm-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+    --bm-container: 1180px;
+  }
+
+  body { background: var(--bm-bg); color: var(--bm-text); }
+
+  #bm-home-root {
+    max-width: var(--bm-container);
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+  }
+
+  .bm-home-wrap { padding: 34px 0 96px; }
+  .bm-hero { padding: 52px 0 40px; text-align: center; }
+
+  .bm-hero-badge {
+    display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px;
+    background: var(--bm-primary-soft); color: var(--bm-primary); border-radius: 999px;
+    font-size: 15px; font-weight: 700; margin-bottom: 24px;
+  }
+
+  .bm-hero-badge-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--bm-success); flex: 0 0 10px;
+  }
+
+  .bm-hero-title {
+    margin: 0 auto 16px; max-width: 860px; font-size: 66px; line-height: 0.96;
+    font-weight: 800; letter-spacing: -0.04em;
+  }
+
+  .bm-hero-title-accent { color: var(--bm-primary); }
+
+  .bm-hero-text {
+    margin: 0 auto; max-width: 760px; font-size: 24px; line-height: 1.5; color: var(--bm-muted);
+  }
+
+  .bm-hero-actions {
+    display: flex; justify-content: center; gap: 14px; margin-top: 30px; flex-wrap: wrap;
+  }
+
+  .bm-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 54px;
+    padding: 0 28px; border-radius: 16px; font-size: 16px; font-weight: 700;
+    text-decoration: none; transition: 0.2s ease; border: 1px solid transparent; box-sizing: border-box;
+  }
+
+  .bm-btn-primary { background: var(--bm-primary); color: #fff; }
+  .bm-btn-primary:hover { background: var(--bm-primary-dark); transform: translateY(-1px); }
+  .bm-btn-secondary { background: #fff; color: var(--bm-text); border-color: var(--bm-line); }
+  .bm-btn-secondary:hover { background: #f9fafb; }
+
+  .bm-features {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 22px; margin-bottom: 56px;
+  }
+
+  .bm-feature-card {
+    background: var(--bm-white); border: 1px solid var(--bm-line); border-radius: 22px; padding: 22px;
+    box-shadow: var(--bm-shadow);
+  }
+
+  .bm-feature-icon {
+    width: 50px; height: 50px; border-radius: 16px; background: var(--bm-primary-soft);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--bm-primary);
+  }
+
+  .bm-feature-icon svg { width: 22px; height: 22px; stroke: currentColor; }
+  .bm-feature-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .bm-feature-title { margin: 0 0 10px; font-size: 24px; line-height: 1.2; font-weight: 800; }
+  .bm-feature-text { margin: 0; color: var(--bm-muted); font-size: 16px; line-height: 1.55; }
+
+  .bm-section-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;
+  }
+
+  .bm-section-title { margin: 0; font-size: 38px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; }
+  .bm-section-link { text-decoration: none; color: var(--bm-primary); font-weight: 700; font-size: 16px; white-space: nowrap; }
+
+  .bm-warehouses-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+
+  .warehouse-card {
+    position: relative; background: var(--bm-white); border: 1px solid var(--bm-line); border-radius: 24px;
+    overflow: hidden; box-shadow: var(--bm-shadow); transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer; text-decoration: none; color: inherit; display: block; padding: 0 !important;
+  }
+
+  .warehouse-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(17, 24, 39, 0.1); }
+
+  .warehouse-photo-wrap {
+    width: 100% !important; padding: 0 !important; margin: 0 !important; display: block; line-height: 0;
+    overflow: hidden; position: relative; aspect-ratio: 16 / 9; background: #e5e7eb;
+  }
+
+  .warehouse-photo {
+    width: 100% !important; height: 100% !important; margin: 0 !important; display: block !important;
+    object-fit: cover;
+  }
+
+  .warehouse-photo-soon {
+    width: 100%; height: 100%; min-height: inherit; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #eef2ff 0%, #f8faff 100%); color: var(--bm-primary);
+    text-align: center; font-size: 28px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em;
+    padding: 24px; box-sizing: border-box;
+  }
+
+  .warehouse-badge.is-soon { background: rgba(238, 241, 255, 0.96); color: var(--bm-primary); }
+  .warehouse-badge.is-soon .warehouse-badge-dot { background: var(--bm-primary); }
+
+  .warehouse-badge {
+    position: absolute; top: 16px; left: 16px; display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: rgba(236, 253, 245, 0.96); color: #15803d; font-size: 14px;
+    font-weight: 700; border-radius: 999px; backdrop-filter: blur(8px);
+  }
+
+  .warehouse-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+  .warehouse-body { padding: 22px; }
+  .warehouse-name { display: none; }
+
+  .warehouse-address {
+    margin: 0 0 10px; color: var(--bm-text); font-size: 24px; line-height: 1.2;
+    font-weight: 800; letter-spacing: -0.02em;
+  }
+
+  .warehouse-desc { margin: 0 0 14px; color: var(--bm-muted); font-size: 15px; line-height: 1.45; }
+
+  .warehouse-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+
+  .warehouse-meta-item {
+    padding: 10px 14px; border-radius: 999px; background: #f8fafc; border: 1px solid var(--bm-line);
+    font-size: 14px; font-weight: 600; color: #334155;
+  }
+
+  .warehouse-footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  }
+
+  .warehouse-price-from { display: none; }
+
+  .warehouse-open-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px;
+    border-radius: 14px; background: var(--bm-primary); color: #fff; text-decoration: none; font-weight: 700;
+    transition: 0.2s ease; font-size: 14px;
+  }
+
+  .warehouse-open-btn:hover { background: var(--bm-primary-dark); }
+
+  .bm-loading-box, .bm-error-box {
+    background: var(--bm-white); border: 1px solid var(--bm-line); border-radius: 20px; padding: 18px 20px;
+    color: var(--bm-muted); box-shadow: var(--bm-shadow);
+  }
+
+  .bm-error-box { display: grid; gap: 12px; }
+
+  .bm-retry-btn {
+    display: inline-flex; align-items: center; justify-content: center; width: fit-content; min-height: 44px;
+    padding: 0 16px; border-radius: 14px; border: 1px solid var(--bm-line); background: #fff;
+    color: var(--bm-text); font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  .bm-retry-btn:hover { background: #f9fafb; }
+
+  @media (max-width: 991px) {
+    .bm-hero-title { font-size: 54px; }
+    .bm-hero-text { font-size: 21px; }
+    .bm-features { grid-template-columns: 1fr; }
+    .bm-warehouses-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 767px) {
+    #bm-home-root { padding-left: 16px; padding-right: 16px; }
+    .bm-home-wrap { padding: 16px 0 112px; }
+    .bm-hero { padding: 18px 0 22px; text-align: left; }
+    .bm-hero-badge { margin-bottom: 14px; font-size: 12px; padding: 8px 12px; gap: 8px; }
+    .bm-hero-badge-dot { width: 8px; height: 8px; flex-basis: 8px; }
+    .bm-hero-title { font-size: 34px; line-height: 0.98; max-width: none; margin-bottom: 12px; letter-spacing: -0.035em; }
+    .bm-hero-text { max-width: none; font-size: 16px; line-height: 1.5; }
+    .bm-hero-actions { justify-content: flex-start; margin-top: 20px; gap: 10px; }
+    .bm-btn { width: 100%; min-height: 50px; border-radius: 15px; font-size: 15px; }
+    .bm-features { gap: 12px; margin-top: 12px; margin-bottom: 34px; }
+    .bm-feature-head { gap: 12px; margin-bottom: 12px; }
+    .bm-feature-card { padding: 18px; border-radius: 20px; }
+    .bm-feature-icon { width: 46px; height: 46px; border-radius: 14px; margin-bottom: 14px; }
+    .bm-feature-title { font-size: 20px; margin-bottom: 8px; }
+    .bm-feature-text { font-size: 14px; line-height: 1.5; }
+    .bm-section-head { margin-bottom: 14px; align-items: center; }
+    .bm-section-title { font-size: 26px; line-height: 1.05; }
+    .bm-section-link { font-size: 14px; }
+    .bm-warehouses-grid { gap: 16px; }
+    .warehouse-card { border-radius: 22px; }
+    .warehouse-badge { top: 12px; left: 12px; padding: 7px 11px; font-size: 13px; gap: 7px; }
+    .warehouse-body { padding: 16px; }
+    .warehouse-address { font-size: 18px; font-weight: 800; color: var(--bm-text); margin-bottom: 4px; line-height: 1.2; letter-spacing: -0.02em; }
+    .warehouse-desc { font-size: 13px; margin-bottom: 8px; line-height: 1.32; }
+    .warehouse-meta { margin-bottom: 0; gap: 6px; flex: 0 0 auto; }
+    .warehouse-meta-item { padding: 6px 10px; font-size: 12px; }
+    .warehouse-footer { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
+    .warehouse-open-btn { margin-top: 10px; width: 100%; min-height: 48px; font-size: 15px; }
+    .warehouse-photo-soon { font-size: 22px; }
+  }
+</style>
+
+<div id="bm-home-root"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    const SUPABASE_URL = "https://jjvfilxdnpdywtbhcfrq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_lL2I9njAuzNIMsBUD0cHYQ_dSH6uOzm";
+    const REQUEST_TIMEOUT_MS = 10000;
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const root = document.getElementById("bm-home-root");
+
+    if (!root) {
+      console.error("Не найден #bm-home-root");
+      return;
+    }
+
+    root.innerHTML = `
+      <div class="bm-home-wrap">
+        <section class="bm-hero">
+          <div class="bm-hero-badge">
+            <span class="bm-hero-badge-dot"></span>
+            <span class="bm-free-total">Свободные ячейки загружаются...</span>
+          </div>
+
+          <h1 class="bm-hero-title">
+            Аренда <span class="bm-hero-title-accent">ячеек</span><br> для хранения вещей
+          </h1>
+
+          <p class="bm-hero-text">
+            Храните коробки, сезонные вещи, шины, велосипед, лыжи и крупные предметы в удобной ячейке рядом с домом.
+          </p>
+
+          <div class="bm-hero-actions">
+            <a href="/sklady" class="bm-btn bm-btn-primary">Выбрать ячейку</a>
+            <a href="/contacts/" class="bm-btn bm-btn-secondary">Связаться с нами</a>
+          </div>
+        </section>
+
+        <section class="bm-features">
+          <div class="bm-feature-card">
+            <div class="bm-feature-head">
+              <div class="bm-feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                  <path d="M12 3l7 3v6c0 4.5-2.8 7.7-7 9-4.2-1.3-7-4.5-7-9V6l7-3z"></path>
+                </svg>
+              </div>
+              <h3 class="bm-feature-title">Разные размеры</h3>
+            </div>
+            <p class="bm-feature-text">Выберите подходящий объем: от небольших ячеек для коробок и личных вещей до крупных вариантов для шин, велосипеда и техники.</p>
+          </div>
+
+          <div class="bm-feature-card">
+            <div class="bm-feature-head">
+              <div class="bm-feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 2"></path>
+                </svg>
+              </div>
+              <h3 class="bm-feature-title">Бронирование</h3>
+            </div>
+            <p class="bm-feature-text">Выберите склад, забронируйте свободную ячейку на сайте, заполните данные и продолжите оформление в личном кабинете.</p>
+          </div>
+
+          <div class="bm-feature-card">
+            <div class="bm-feature-head">
+              <div class="bm-feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                  <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"></path>
+                </svg>
+              </div>
+              <h3 class="bm-feature-title">Удобный доступ</h3>
+            </div>
+            <p class="bm-feature-text">После оформления и оплаты вы получаете доступ к складу и можете пользоваться своей ячейкой в рамках условий аренды.</p>
+          </div>
+        </section>
+
+        <section id="warehouses" class="bm-warehouses-section">
+          <div class="bm-section-head">
+            <h2 class="bm-section-title">Наши склады</h2>
+            <a href="/sklady" class="bm-section-link">Все склады →</a>
+          </div>
+          <div class="bm-loading-box">Загрузка складов...</div>
+        </section>
+      </div>
+    `;
+
+    const freeTotalEl = root.querySelector(".bm-free-total");
+
+    function getWarehousesSectionHtml(contentHtml) {
+      return `
+        <div class="bm-section-head">
+          <h2 class="bm-section-title">Наши склады</h2>
+          <a href="/sklady" class="bm-section-link">Все склады →</a>
+        </div>
+        ${contentHtml}
+      `;
+    }
+
+    function getWarehouseDescription(freeCount) {
+      if (freeCount > 0) return "Действующий склад с доступными ячейками разных размеров для хранения вещей рядом с домом.";
+      return "Локация готовится к работе или сейчас свободных мест нет.";
+    }
+
+    function createTimeoutPromise(ms) {
+      return new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error("timeout"));
+        }, ms);
+      });
+    }
+
+    async function withTimeout(promise, ms) {
+      return await Promise.race([promise, createTimeoutPromise(ms)]);
+    }
+
+    function renderWarehousesError(text) {
+      const section = root.querySelector(".bm-warehouses-section");
+      if (!section) return;
+
+      section.innerHTML = getWarehousesSectionHtml(`
+        <div class="bm-error-box">
+          <div>${text}</div>
+          <button type="button" class="bm-retry-btn" id="bmRetryWarehousesBtn">Повторить</button>
+        </div>
+      `);
+
+      const retryBtn = document.getElementById("bmRetryWarehousesBtn");
+      if (retryBtn) {
+        retryBtn.addEventListener("click", function () {
+          loadWarehouses();
+        });
+      }
+    }
+
+    async function loadWarehouses() {
+      const section = root.querySelector(".bm-warehouses-section");
+      if (!section) return;
+
+      section.innerHTML = getWarehousesSectionHtml('<div class="bm-loading-box">Загрузка складов...</div>');
+      freeTotalEl.textContent = "Свободные ячейки загружаются...";
+
+      try {
+        const warehousesRes = await withTimeout(
+          client.from("warehouses").select("id, name, address, photo_url, active").eq("active", true).order("name", { ascending: true }),
+          REQUEST_TIMEOUT_MS
+        );
+
+        if (warehousesRes.error) {
+          console.error("warehousesError", warehousesRes.error);
+          renderWarehousesError("Не удалось загрузить склады.");
+          freeTotalEl.textContent = "Не удалось загрузить свободные ячейки";
+          return;
+        }
+
+        const warehouses = warehousesRes.data || [];
+        if (!warehouses.length) {
+          renderWarehousesError("Нет доступных складов.");
+          freeTotalEl.textContent = "Сейчас нет доступных ячеек";
+          return;
+        }
+
+        const warehouseIds = warehouses.map(function (w) { return w.id; });
+
+        const cellsRes = await withTimeout(
+          client.from("cells").select("warehouse_id, busy, price").in("warehouse_id", warehouseIds),
+          REQUEST_TIMEOUT_MS
+        );
+
+        if (cellsRes.error) {
+          console.error("cellsError", cellsRes.error);
+          renderWarehousesError("Не удалось загрузить данные по ячейкам.");
+          freeTotalEl.textContent = "Не удалось загрузить свободные ячейки";
+          return;
+        }
+
+        const cells = cellsRes.data || [];
+        const totalFreeCells = cells.filter(function (cell) { return !cell.busy; }).length;
+        freeTotalEl.textContent = totalFreeCells + " свободных ячеек прямо сейчас";
+
+        const grid = document.createElement("div");
+        grid.className = "bm-warehouses-grid";
+
+        warehouses.forEach(function (warehouse) {
+          const warehouseCells = cells.filter(function (cell) { return cell.warehouse_id === warehouse.id; });
+          const totalCount = warehouseCells.length;
+          const freeCount = warehouseCells.filter(function (cell) { return !cell.busy; }).length;
+          const prices = warehouseCells
+            .map(function (cell) { return Number(cell.price); })
+            .filter(function (price) { return !Number.isNaN(price) && price > 0; });
+          const minPrice = prices.length ? Math.min.apply(null, prices) : null;
+          const warehouseUrl = "/sklad?id=" + warehouse.id;
+          const card = document.createElement("a");
+          const isSoon = !warehouse.photo_url && totalCount === 0;
+
+          card.className = "warehouse-card";
+          card.href = warehouseUrl;
+
+          card.innerHTML = `
+            <div class="warehouse-photo-wrap">
+              ${
+                isSoon
+                  ? `<div class="warehouse-photo-soon">Скоро<br>открытие</div>`
+                  : `${warehouse.photo_url ? `<img class="warehouse-photo" src="${warehouse.photo_url}" alt="${warehouse.name || "Склад"}">` : ""}`
+              }
+              <div class="warehouse-badge ${isSoon ? "is-soon" : ""}">
+                <span class="warehouse-badge-dot"></span>
+                <span>${isSoon ? "Скоро открытие" : `${freeCount} свободно`}</span>
+              </div>
+            </div>
+
+            <div class="warehouse-body">
+              <h3 class="warehouse-name">${warehouse.name || "Без названия"}</h3>
+              <p class="warehouse-address">${warehouse.address || ""}</p>
+              <p class="warehouse-desc">${getWarehouseDescription(freeCount)}</p>
+
+              ${
+                isSoon
+                  ? ``
+                  : `
+                    <div class="warehouse-footer">
+                      <div class="warehouse-meta">
+                        <div class="warehouse-meta-item">Ячеек: ${totalCount}</div>
+                        <div class="warehouse-meta-item warehouse-meta-item-free">Свободно: ${freeCount}</div>
+                      </div>
+                      <div class="warehouse-price-from">от <strong>${minPrice ? Number(minPrice).toLocaleString("ru-RU") : "—"}</strong> ₽/мес</div>
+                    </div>
+                    <span class="warehouse-open-btn">от ${minPrice ? Number(minPrice).toLocaleString("ru-RU") : "—"} ₽/мес</span>
+                  `
+              }
+
+              ${
+                isSoon
+                  ? `<span class="warehouse-open-btn" style="background:#eef2ff;color:#3d4ed7;">Скоро открытие</span>`
+                  : ``
+              }
+            </div>
+          `;
+
+          grid.appendChild(card);
+        });
+
+        section.innerHTML = getWarehousesSectionHtml("");
+        section.appendChild(grid);
+      } catch (error) {
+        console.error("loadWarehouses fatal error", error);
+        renderWarehousesError("Не удалось загрузить склады. Проверьте интернет и попробуйте снова.");
+        freeTotalEl.textContent = "Не удалось загрузить свободные ячейки";
+      }
+    }
+
+    await loadWarehouses();
+  });
+</script>

@@ -1,0 +1,272 @@
+<style>
+  .bm-top-nav {
+    width: 100%;
+    border-bottom: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 9998;
+  }
+
+  .bm-top-nav-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-sizing: border-box;
+  }
+
+  .bm-top-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #111827;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .bm-top-brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: #3d4ed7;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+  }
+
+  .bm-top-brand-mark svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+  }
+
+  .bm-top-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bm-top-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #4b5563;
+    font-size: 15px;
+    font-weight: 600;
+    transition: 0.2s ease;
+  }
+
+  .bm-top-link:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  .bm-top-link.is-active {
+    background: #eef1ff;
+    color: #3d4ed7;
+    font-weight: 700;
+  }
+
+  .bm-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 76px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #e5e7eb;
+    display: none;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 9999;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+  }
+
+  .bm-nav-btn {
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .bm-nav-btn.is-active {
+    color: #3d4ed7;
+  }
+
+  .bm-nav-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bm-nav-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+  }
+
+  @media (max-width: 767px) {
+    .bm-top-nav {
+      display: none;
+    }
+
+    .bm-bottom-nav {
+      display: flex;
+    }
+
+    body {
+      padding-bottom: 92px !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .bm-top-nav {
+      display: block;
+    }
+
+    .bm-bottom-nav {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+
+    function isActive(type) {
+      if (type === "home") {
+        return path === "/";
+      }
+      if (type === "sklady") {
+        return path === "/sklady";
+      }
+      if (type === "access") {
+        return path === "/access";
+      }
+      if (type === "account") {
+        return path === "/account";
+      }
+      if (type === "contacts") {
+        return path === "/contacts";
+      }
+      return false;
+    }
+
+    if (!document.querySelector(".bm-top-nav")) {
+      const topNav = document.createElement("div");
+      topNav.className = "bm-top-nav";
+      topNav.innerHTML = `
+        <div class="bm-top-nav-inner">
+          <a class="bm-top-brand" href="/">
+            <span class="bm-top-brand-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z"></path>
+                <path d="M9 10.5l3-1.5 3 1.5v3L12 15l-3-1.5v-3z"></path>
+              </svg>
+            </span>
+            <span>БериМесто</span>
+          </a>
+
+          <div class="bm-top-links">
+            <a class="bm-top-link ${isActive("home") ? "is-active" : ""}" href="/">Главная</a>
+            <a class="bm-top-link ${isActive("sklady") ? "is-active" : ""}" href="/sklady">Склады</a>
+            <a class="bm-top-link ${isActive("access") ? "is-active" : ""}" href="/access">Доступ</a>
+            <a class="bm-top-link ${isActive("account") ? "is-active" : ""}" href="/account">Личный кабинет</a>
+            <a class="bm-top-link ${isActive("contacts") ? "is-active" : ""}" href="/contacts/">Контакты</a>
+          </div>
+        </div>
+      `;
+
+      const section = document.querySelector("section");
+      if (section) {
+        section.prepend(topNav);
+      }
+    }
+
+    if (!document.querySelector(".bm-bottom-nav")) {
+      const bottomNav = document.createElement("div");
+      bottomNav.className = "bm-bottom-nav";
+      bottomNav.innerHTML = `
+        <a class="bm-nav-btn ${isActive("home") ? "is-active" : ""}" href="/">
+          <span class="bm-nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+              <path d="M3 10.5L12 3l9 7.5"></path>
+              <path d="M5 9.5V21h14V9.5"></path>
+            </svg>
+          </span>
+          <span>Главная</span>
+        </a>
+
+        <a class="bm-nav-btn ${isActive("sklady") ? "is-active" : ""}" href="/sklady">
+          <span class="bm-nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+              <path d="M3 7h18"></path>
+              <path d="M6 12h12"></path>
+              <path d="M9 17h6"></path>
+            </svg>
+          </span>
+          <span>Склады</span>
+        </a>
+
+        <a class="bm-nav-btn ${isActive("access") ? "is-active" : ""}" href="/access">
+          <span class="bm-nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+              <rect x="4" y="11" width="16" height="9" rx="2"></rect>
+              <path d="M8 11V8a4 4 0 1 1 8 0v3"></path>
+            </svg>
+          </span>
+          <span>Доступ</span>
+        </a>
+
+        <a class="bm-nav-btn ${isActive("account") ? "is-active" : ""}" href="/account">
+          <span class="bm-nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"></path>
+            </svg>
+          </span>
+          <span>Кабинет</span>
+        </a>
+
+        <a class="bm-nav-btn ${isActive("contacts") ? "is-active" : ""}" href="/contacts/">
+          <span class="bm-nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+              <path d="M4 6h16v12H4z"></path>
+              <path d="M4 7l8 6 8-6"></path>
+            </svg>
+          </span>
+          <span>Контакты</span>
+        </a>
+      `;
+
+      document.body.appendChild(bottomNav);
+    }
+  });
+</script>
